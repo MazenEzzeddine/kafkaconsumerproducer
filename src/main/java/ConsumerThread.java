@@ -67,6 +67,7 @@ public class ConsumerThread implements Runnable {
                    // Long timeBeforePolling = System.currentTimeMillis();
                     for (ConsumerRecord<String, Customer> record : records) {
                         totalEvents++;
+                        log.info("System.currentTimeMillis() - record.timestamp() {}", System.currentTimeMillis() - record.timestamp());
                         if (System.currentTimeMillis() - record.timestamp() <= 5000) {
                             eventsNonViolating++;
                         }else {
@@ -77,7 +78,7 @@ public class ConsumerThread implements Runnable {
                             Thread.sleep(Long.parseLong(config.getSleep()));
 
                             producer.send(new ProducerRecord<String, Customer>("testtopic2",
-                                    null, null, record.key(), record.value()));
+                                    null, record.timestamp(), record.key(), record.value()));
                            // log.info("Sleeping for {}", config.getSleep());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
