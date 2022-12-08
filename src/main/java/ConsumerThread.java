@@ -1,3 +1,9 @@
+import com.sun.net.httpserver.HttpServer;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -6,10 +12,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.UUID;
+
+
+
 
 public class ConsumerThread implements Runnable {
     private static final Logger log = LogManager.getLogger(KafkaConsumerTestAssignor.class);
@@ -24,6 +36,16 @@ public class ConsumerThread implements Runnable {
     static long pollsSoFar = 0;
     static Double maxConsumptionRatePerConsumer1 = 0.0d;
     //Long[] waitingTimes = new Long[10];
+
+
+
+    static PrometheusMeterRegistry prometheusRegistry;
+
+    static  TimeMeasure latencygaugemeasure;
+    static Gauge latencygauge;
+
+
+
     KafkaProducer<String, Customer> producer= KafkaProducerExample.producerFactory();
 
     public ConsumerThread() throws IOException, URISyntaxException, InterruptedException {
@@ -44,6 +66,8 @@ public class ConsumerThread implements Runnable {
         consumer = new KafkaConsumer<String, Customer>(props);
         consumer.subscribe(Collections.singletonList(config.getTopic()));
         log.info("Subscribed to topic {}", config.getTopic());
+        initPrometheus();
+
 
       /*  Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -63,9 +87,14 @@ public class ConsumerThread implements Runnable {
                 Long timeBeforePolling = System.currentTimeMillis();
                 ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
                 //ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(0));
+           /*     double percenttopic2= records.count()*0.3;
+                int currentEventIndex = 0;*/
+
                 if (records.count() != 0) {
                    // Long timeBeforePolling = System.currentTimeMillis();
                     for (ConsumerRecord<String, Customer> record : records) {
+                        //currentEventIndex++;
+                        latencygaugemeasure.setDuration(System.currentTimeMillis() - record.timestamp());
                         totalEvents++;
                         log.info("System.currentTimeMillis() - record.timestamp() {}", System.currentTimeMillis() - record.timestamp());
                         if (System.currentTimeMillis() - record.timestamp() <= 5000) {
@@ -76,15 +105,19 @@ public class ConsumerThread implements Runnable {
                         //TODO sleep per record or per batch
                         try {
                             Thread.sleep(Long.parseLong(config.getSleep()));
-
+                           /* if (currentEventIndex <percenttopic2) {
                             producer.send(new ProducerRecord<String, Customer>("testtopic2",
-                                    null, record.timestamp(), record.key(), record.value()));
+                                    null, record.timestamp(),  UUID.randomUUID().toString() ,record.value()));
+                            } else {
+                                producer.send(new ProducerRecord<String, Customer>("testtopic3",
+                                        null, record.timestamp(),  UUID.randomUUID().toString(), record.value()));
+
+                            }*/
                            // log.info("Sleeping for {}", config.getSleep());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-
                     if (commit) {
                         consumer.commitSync();
                     }
@@ -121,4 +154,36 @@ public class ConsumerThread implements Runnable {
            log.info("Closed consumer and we are done");
         }
     }
+
+
+
+
+    private static void initPrometheus() {
+        prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+            server.createContext("/prometheus", httpExchange -> {
+                String response = prometheusRegistry.scrape();
+                httpExchange.sendResponseHeaders(200, response.getBytes().length);
+                try (OutputStream os = httpExchange.getResponseBody()) {
+                    os.write(response.getBytes());
+                }
+            });
+            new Thread(server::start).start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        latencygaugemeasure = new TimeMeasure(0.0);
+
+        latencygauge = Gauge.builder("latencygauge", latencygaugemeasure , TimeMeasure::getDuration).register(prometheusRegistry);//prometheusRegistry.gauge("timergauge" );
+
+    }
+
+
+
+
+
+
 }
