@@ -40,14 +40,11 @@ public class ConsumerThread implements Runnable {
 
 
     static PrometheusMeterRegistry prometheusRegistry;
-
     static  TimeMeasure latencygaugemeasure;
     static Gauge latencygauge;
 
 
-
     KafkaProducer<String, Customer> producer= KafkaProducerExample.producerFactory();
-
     public ConsumerThread() throws IOException, URISyntaxException, InterruptedException {
     }
 
@@ -174,9 +171,7 @@ public class ConsumerThread implements Runnable {
             throw new RuntimeException(e);
         }
 
-
         latencygaugemeasure = new TimeMeasure(0.0);
-
         latencygauge = Gauge.builder("latencygauge", latencygaugemeasure , TimeMeasure::getDuration).register(prometheusRegistry);//prometheusRegistry.gauge("timergauge" );
 
     }
