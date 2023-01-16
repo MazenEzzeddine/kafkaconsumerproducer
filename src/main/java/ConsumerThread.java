@@ -32,7 +32,6 @@ public class ConsumerThread implements Runnable {
     static float maxConsumptionRatePerConsumer = 0.0f;
     static float ConsumptionRatePerConsumerInThisPoll = 0.0f;
     static float averageRatePerConsumerForGrpc = 0.0f;
-
     static long pollsSoFar = 0;
     static Double maxConsumptionRatePerConsumer1 = 0.0d;
     //Long[] waitingTimes = new Long[10];
@@ -84,13 +83,14 @@ public class ConsumerThread implements Runnable {
                 Long timeBeforePolling = System.currentTimeMillis();
                 ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
                 //ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(0));
-           /*     double percenttopic2= records.count()*0.3;
-                int currentEventIndex = 0;*/
+                double percenttopic2= /*Math.ceil(*/records.count()*0.9;/*);*/
+                int currentEventIndex = 0;
 
                 if (records.count() != 0) {
                    // Long timeBeforePolling = System.currentTimeMillis();
                     for (ConsumerRecord<String, Customer> record : records) {
-                        //currentEventIndex++;
+                        currentEventIndex++;
+
                         latencygaugemeasure.setDuration(System.currentTimeMillis() - record.timestamp());
                         totalEvents++;
                         log.info("System.currentTimeMillis() - record.timestamp() {}", System.currentTimeMillis() - record.timestamp());
@@ -102,10 +102,11 @@ public class ConsumerThread implements Runnable {
                         //TODO sleep per record or per batch
                         try {
                             Thread.sleep(Long.parseLong(config.getSleep()));
-                           /* if (currentEventIndex <percenttopic2) {
-                            producer.send(new ProducerRecord<String, Customer>("testtopic2",
+                           if (currentEventIndex <percenttopic2) {
+                            producer.send(new ProducerRecord<String, Customer>("testtopic5",
                                     null, record.timestamp(),  UUID.randomUUID().toString() ,record.value()));
-                            } else {
+
+                           } /*else {
                                 producer.send(new ProducerRecord<String, Customer>("testtopic3",
                                         null, record.timestamp(),  UUID.randomUUID().toString(), record.value()));
 
