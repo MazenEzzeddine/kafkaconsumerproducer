@@ -33,7 +33,7 @@ public class ConsumerThread implements Runnable {
     static float ConsumptionRatePerConsumerInThisPoll = 0.0f;
     static float averageRatePerConsumerForGrpc = 0.0f;
     static long pollsSoFar = 0;
-    static Double maxConsumptionRatePerConsumer1 = 0.0d;
+    //static Double maxConsumptionRatePerConsumer1 = 0.0d;
     //Long[] waitingTimes = new Long[10];
 
 
@@ -64,7 +64,6 @@ public class ConsumerThread implements Runnable {
         log.info("Subscribed to topic {}", config.getTopic());
         initPrometheus();
 
-
       /*  Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 log.info("Starting exit...");
@@ -77,39 +76,32 @@ public class ConsumerThread implements Runnable {
             }
         });*/
 
-        // int warmup = 0;
         try {
             while (true) {
                 Long timeBeforePolling = System.currentTimeMillis();
                 ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
-                //ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(0));
-                double percenttopic2= /*Math.ceil(*/records.count()*0.9;/*);*/
-                int currentEventIndex = 0;
-
                 if (records.count() != 0) {
-                   // Long timeBeforePolling = System.currentTimeMillis();
+                    double percenttopic2= /*Math.ceil(*/records.count()*0.7;/*);*/
+                    double currentEventIndex = 1;
                     for (ConsumerRecord<String, Customer> record : records) {
-                        currentEventIndex++;
-
                         latencygaugemeasure.setDuration(System.currentTimeMillis() - record.timestamp());
                         totalEvents++;
-                        log.info("System.currentTimeMillis() - record.timestamp() {}", System.currentTimeMillis() - record.timestamp());
                         if (System.currentTimeMillis() - record.timestamp() <= 5000) {
                             eventsNonViolating++;
-                        }else {
+                        } else {
                             eventsViolating++;
                         }
                         //TODO sleep per record or per batch
                         try {
                             Thread.sleep(Long.parseLong(config.getSleep()));
-                           if (currentEventIndex <percenttopic2) {
-                            producer.send(new ProducerRecord<String, Customer>("testtopic5",
-                                    null, record.timestamp(),  UUID.randomUUID().toString() ,record.value()));
+                            if (currentEventIndex < percenttopic2) {
+                                currentEventIndex++;
 
+                                producer.send(new ProducerRecord<String, Customer>("testtopic5",
+                                    null, record.timestamp(),  UUID.randomUUID().toString() ,record.value()));
                            } /*else {
                                 producer.send(new ProducerRecord<String, Customer>("testtopic3",
                                         null, record.timestamp(),  UUID.randomUUID().toString(), record.value()));
-
                             }*/
                            // log.info("Sleeping for {}", config.getSleep());
                         } catch (InterruptedException e) {
@@ -130,25 +122,19 @@ public class ConsumerThread implements Runnable {
                     if (maxConsumptionRatePerConsumer < ConsumptionRatePerConsumerInThisPoll) {
                         maxConsumptionRatePerConsumer = ConsumptionRatePerConsumerInThisPoll;
                     }
-                   maxConsumptionRatePerConsumer1 = Double.parseDouble(String.valueOf(averageRatePerConsumerForGrpc));
                     log.info("ConsumptionRatePerConsumerInThisPoll in this poll {}", ConsumptionRatePerConsumerInThisPoll);
                     log.info("maxConsumptionRatePerConsumer {}", maxConsumptionRatePerConsumer);
-
-                    log.info("averageRatePerConsumerForGrpc  {}", averageRatePerConsumerForGrpc);
                     double percentViolating = (double) eventsViolating/(double)totalEvents;
                     double percentNonViolating = (double) eventsNonViolating/(double)totalEvents;
                     log.info("Percent violating so far {}", percentViolating);
                     log.info("Percent non violating so far {}", percentNonViolating);
                     log.info("total events {}", totalEvents);
-                    log.info("Number of events non violating {}", eventsNonViolating);
-                    log.info(" Number of events violating {}", eventsViolating);
                 }
             }
         } catch (WakeupException e) {
            // e.printStackTrace();
         } finally {
             consumer.close();
-           log.info("You may want to print the events");
            log.info("Closed consumer and we are done");
         }
     }

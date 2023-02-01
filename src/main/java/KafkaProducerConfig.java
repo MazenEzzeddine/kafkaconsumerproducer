@@ -33,16 +33,15 @@ public class KafkaProducerConfig {
     }
     public static KafkaProducerConfig fromEnv() {
         String bootstrapServers = "my-cluster-kafka-bootstrap:9092";//System.getenv("BOOTSTRAP_SERVERS");
-        String topic = "testtopic2"; //System.getenv("TOPIC");
         int delay = 1;
         Long messageCount = System.getenv("MESSAGE_COUNT") == null ?
                 DEFAULT_MESSAGES_COUNT : Long.valueOf(System.getenv("MESSAGE_COUNT"));
         String message = System.getenv("MESSAGE") == null ? DEFAULT_MESSAGE :
                 System.getenv("MESSAGE");
-        String acks = System.getenv().getOrDefault("PRODUCER_ACKS", "1");
+        String acks = System.getenv().getOrDefault("PRODUCER_ACKS", "0");
         //String headers = System.getenv("HEADERS");
         String additionalConfig = System.getenv().getOrDefault("ADDITIONAL_CONFIG", "");
-        return new KafkaProducerConfig(bootstrapServers, "testtopic2", delay, messageCount, message,
+        return new KafkaProducerConfig(bootstrapServers, "testtopic5", delay, messageCount, message,
                 acks, additionalConfig);
     }
 

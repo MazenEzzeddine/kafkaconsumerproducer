@@ -19,12 +19,7 @@ public class LagBasedPartitionAssignor extends AbstractAssignor implements Confi
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LagBasedPartitionAssignor.class);
 
-
-
-
-
     private   String thenamelocal = System.getenv("THENAME");
-
 
 
     public LagBasedPartitionAssignor() {
@@ -39,7 +34,7 @@ public class LagBasedPartitionAssignor extends AbstractAssignor implements Confi
     static final String TOPIC_PARTITIONS_KEY_NAME = "previous_assignment";
     static final String TOPIC_KEY_NAME = "topic";
     static final String PARTITIONS_KEY_NAME = "partitions";
-    ;
+
     static final String MAX_CONSUMPTION_RATE = "maxConsumptionRate";
 
     static final String THE_name = "thename";
@@ -128,7 +123,7 @@ public class LagBasedPartitionAssignor extends AbstractAssignor implements Confi
         //memberAssignment=Collections.emptyList();
         LOGGER.info("Inside sub user data and KafkaConsumerConfig.thename is {}",System.getenv("THENAME"));
         return serializeTopicPartitionAssignment(new MemberData(
-                ConsumerThread.maxConsumptionRatePerConsumer1, System.getenv("THENAME"), Optional.of(generation)));
+                (double) ConsumerThread.maxConsumptionRatePerConsumer, System.getenv("THENAME"), Optional.of(generation)));
     }
 
     // visible for testing
