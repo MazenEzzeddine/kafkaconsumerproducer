@@ -170,9 +170,9 @@ public class ConsumerThread2 implements Runnable {
             throw new RuntimeException(e);
         }
 
+
         latencygaugemeasure = new TimeMeasure(0.0);
         latencygauge = Gauge.builder("latencygauge", latencygaugemeasure, TimeMeasure::getDuration).register(prometheusRegistry);//prometheusRegistry.gauge("timergauge" );
-
     }
 
 
