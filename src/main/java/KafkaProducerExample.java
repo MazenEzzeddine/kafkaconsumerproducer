@@ -35,9 +35,6 @@ public class KafkaProducerExample {
 
        return producer;
     }
-
-
-
 }
 
 

@@ -1,7 +1,6 @@
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -41,7 +40,7 @@ public class KafkaProducerConfig {
         String acks = System.getenv().getOrDefault("PRODUCER_ACKS", "0");
         //String headers = System.getenv("HEADERS");
         String additionalConfig = System.getenv().getOrDefault("ADDITIONAL_CONFIG", "");
-        return new KafkaProducerConfig(bootstrapServers, "testtopic5", delay, messageCount, message,
+        return new KafkaProducerConfig(bootstrapServers, "testtopic2", delay, messageCount, message,
                 acks, additionalConfig);
     }
 
@@ -57,11 +56,6 @@ public class KafkaProducerConfig {
         props.put(ProducerConfig.ACKS_CONFIG, "0");
         props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "0");
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, "0");
-
-
-
-
-
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                CustomerSerializer.class.getName());
         //props.put(ProducerConfig., "org.apache.kafka.common.serialization.StringSerializer");
