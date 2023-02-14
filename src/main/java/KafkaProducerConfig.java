@@ -40,7 +40,7 @@ public class KafkaProducerConfig {
         String acks = System.getenv().getOrDefault("PRODUCER_ACKS", "0");
         //String headers = System.getenv("HEADERS");
         String additionalConfig = System.getenv().getOrDefault("ADDITIONAL_CONFIG", "");
-        return new KafkaProducerConfig(bootstrapServers, "testtopic2", delay, messageCount, message,
+        return new KafkaProducerConfig(bootstrapServers, "testtopic5", delay, messageCount, message,
                 acks, additionalConfig);
     }
 

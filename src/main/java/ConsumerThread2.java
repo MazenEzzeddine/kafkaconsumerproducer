@@ -65,7 +65,7 @@ public class ConsumerThread2 implements Runnable {
         consumer = new KafkaConsumer<String, Customer>(props);
         consumer.subscribe(Collections.singletonList(config.getTopic()));
         log.info("Subscribed to topic {}", config.getTopic());
-       initPrometheus();
+       //initPrometheus();
 
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -81,13 +81,12 @@ public class ConsumerThread2 implements Runnable {
         });
 
 
-      /*  tps = new ArrayList<>();
-        tps.add(new TopicPartition("testtopic1", 0));
-        tps.add(new TopicPartition("testtopic1", 1));
-        tps.add(new TopicPartition("testtopic1", 2));
-        tps.add(new TopicPartition("testtopic1", 3));
-        tps.add(new TopicPartition("testtopic1", 4));
-*/
+        tps = new ArrayList<>();
+        tps.add(new TopicPartition("testtopic2", 0));
+        tps.add(new TopicPartition("testtopic2", 1));
+        tps.add(new TopicPartition("testtopic2", 2));
+        tps.add(new TopicPartition("testtopic2", 3));
+        tps.add(new TopicPartition("testtopic2", 4));
 
         try {
             while (true) {
@@ -95,10 +94,10 @@ public class ConsumerThread2 implements Runnable {
                 ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
                 if (records.count() != 0) {
 
-                  /*  for (TopicPartition tp : tps) {*/
+                    for (TopicPartition tp : tps) {
                         /*    double percenttopic2 = *//*Math.ceil(*//*records.records(tp).size()*//**0.7*//* *//**0.5*//* *//** 0.7*//*;*//*);*//*
                         double currentEventIndex = 0;*/
-                        for (ConsumerRecord<String, Customer> record : records) {
+                        for (ConsumerRecord<String, Customer> record : records.records(tp)) {
                             totalEvents++;
                             if (System.currentTimeMillis() - record.timestamp() <= 5000) {
                                 eventsNonViolating++;
@@ -108,7 +107,7 @@ public class ConsumerThread2 implements Runnable {
                             //TODO sleep per record or per batch
                             try {
                                 Thread.sleep(Long.parseLong(config.getSleep()));
-                                latencygaugemeasure.setDuration(System.currentTimeMillis() - record.timestamp());
+                               // latencygaugemeasure.setDuration(System.currentTimeMillis() - record.timestamp());
 
                               /*  if (currentEventIndex < percenttopic2) {
 
@@ -116,13 +115,14 @@ public class ConsumerThread2 implements Runnable {
                                 }
                                 currentEventIndex++;*/
 
-                               /* producer.send(new ProducerRecord<String, Customer>("testtopic2",
-                                        tp.partition(), record.timestamp(), record.key(), record.value()));*/
+                                producer.send(new ProducerRecord<String, Customer>("testtopic5",
+                                        tp.partition(), record.timestamp(), record.key(), record.value()));
 
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                         }
+                    }
 
                         if (commit) {
                             consumer.commitSync();
